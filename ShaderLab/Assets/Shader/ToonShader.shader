@@ -20,15 +20,12 @@ Shader "Custom/ToonShader"
 
         half4 LightingToon (SurfaceOutput s, half3 lightDir,half3 viewDir, half atten) 
         {
-            //half3 h = normalize(lightDir + viewDir);
             half diff  = max(0,dot(s.Normal,lightDir));
             half h = diff * 0.5 + 0.5;
             float2 rh = h;
             float3 ramp = tex2D(_RampTex,rh).rgb;
-            //diff = floor(diff / 0.3);
             float spec = pow(rh,48);
             spec = smoothstep(0.005, 0.1,spec);
-            //spec = floor(spec / 0.3);
 
             half4 c;
             c.rgb = (s.Albedo * _LightColor0.rgb * (ramp));

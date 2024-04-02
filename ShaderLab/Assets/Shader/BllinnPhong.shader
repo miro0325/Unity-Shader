@@ -20,11 +20,8 @@ Shader "Custom/BlinnPhong"
         {
             half3 h = normalize(lightDir + viewDir);
             half diff  = max(0,dot(s.Normal,lightDir));
-            //diff = floor(diff / 0.3);
             float nh = max(0,dot(s.Normal,h));
             float spec = pow(nh,48);
-            //spec = smoothstep(0.005, 0.1,spec);
-            //spec = floor(spec / 0.3);
 
             half4 c;
             c.rgb = (s.Albedo * _LightColor0.rgb * diff + _LightColor0.rgb * spec) * atten;
