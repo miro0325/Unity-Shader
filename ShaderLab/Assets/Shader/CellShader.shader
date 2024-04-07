@@ -18,42 +18,42 @@ Shader "Unlit/CellShader"
         Pass
         {
             CGPROGRAM
-            #pragma vertex _VertexFuc
-            #pragma fragment _FragmentFuc
+            #pragma vertex vert
+            #pragma fragment frag
             #include "UnityCG.cginc"
 
             float _Outline_Bold;
             float4 _OutlineColor;
                 
-            struct ST_VertexInput
+            struct appdata
             {
                     float4 vertex : POSITION;
                     float3 normal : NORMAL;
                     float4 color : COLOR;
             }; 
-            struct ST_VertexOutput
+            struct v2f
             {
                 float4 vertex : SV_POSITION;
                 float4 color : COLOR;
             }; 
-            ST_VertexOutput _VertexFuc(ST_VertexInput stInput) 
+            v2f vert(appdata o) 
             {
-                ST_VertexOutput stOutput;
-                stInput.color = _OutlineColor;
+                v2f v;
+                v.color = _OutlineColor;
 
-                float3 fNormalized_Normal = normalize(stInput.normal);
-                float3 fOutline_Position = stInput.vertex + fNormalized_Normal * (_Outline_Bold * 0.1f);
+                float3 fNormalized_Normal = normalize(o.normal);
+                float3 fOutline_Position = o.vertex + fNormalized_Normal * (_Outline_Bold * 0.1f);
 
-                stOutput.vertex = UnityObjectToClipPos(fOutline_Position);
-                stOutput.color = stInput.color;
-                return stOutput;
+                v.vertex = UnityObjectToClipPos(fOutline_Position);
+                v.color = o.color;
+                return v;
                     
             }
 
 
-            float4 _FragmentFuc(ST_VertexOutput frag) : SV_Target
+            float4 frag(v2f i) : SV_Target
             {
-                return frag.color; 
+                return i.color; 
             }
 
             

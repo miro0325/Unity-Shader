@@ -1,53 +1,72 @@
-Shader "Custom/Outline"
+Shader "Custom/OutlineShader"
 {
     Properties
     {
-        _Color ("Color", Color) = (1,1,1,1)
-        _RimColor ("Rim Color", Color) = (1,1,1,1)
-        _RimPower("Rim Power",Range(0,10)) = 1
-        _Outline_Bold ("Outline Bold", Range(0,1)) = 1
-        _MainTex ("Albedo (RGB)", 2D) = "white" {}
-        
+        _MainTex ("Texture", 2D) = "white" {}
+        _Outline_Color("Outline Color", Color) = (1,1,1,1)
+        _Outline_Bold("Outline Bold",Range(0,2)) = 1
     }
     SubShader
     {
         Tags { "RenderType"="Opaque" }
-        LOD 200
-
+        LOD 100
+        
         CGPROGRAM
         #pragma surface surf Lambert
-
-        #pragma target 3.0
-
-        sampler2D _MainTex;
-
-        struct Input
+        struct Input 
         {
-            float2 uv_MainTex;
-            float3 viewDir;
-            float3 worldPos;
+            float2 uv_MainTex;        
         };
 
-        fixed4 _RimColor;
-        fixed4 _Color;
-        half _RimPower;
-        half _Outline_Bold;
-
-        
-        UNITY_INSTANCING_BUFFER_START(Props)
-        UNITY_INSTANCING_BUFFER_END(Props)
-
-        void surf (Input IN, inout SurfaceOutput o)
+        sampler2D _MainTex;
+        void surf(Input IN, inout SurfaceOutput o) 
         {
-            // Albedo comes from a texture tinted by color
-            half rim = 1 - saturate(dot(normalize(IN.viewDir),o.Normal));
-            o.Emission = rim > (1-_Outline_Bold) ? _RimColor: rim > (1-_Outline_Bold)/1.5 ? (_RimColor * 0.3): 0;
-            fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
-            o.Albedo = c.rgb;
-            //// Metallic and smoothness come from slider variables
-            //o.Alpha = c.a;
+            o.Albedo = tex2D(_MainTex,IN.uv_MainTex).rgb;
         }
         ENDCG
+
+        Pass 
+        {
+            Cull front
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include "UnityCG.cginc"
+
+            struct appdata 
+            {
+                float4 vertex : POSITION;
+                float3 normal : NORMAL;
+            };
+
+            struct v2f
+            {
+                float4 pos : SV_POSITION;
+                float4 color : COLOR;
+            };
+
+            float _Outline_Bold;
+            float4 _Outline_Color;
+
+            v2f vert(appdata v) 
+            {
+                v2f o;
+                o.pos = UnityObjectToClipPos(v.vertex);
+                float3 normal = normalize(mul((float3x3)UNITY_MATRIX_IT_MV,v.normal));
+                float2 offset = TransformViewToProjection(normal.xy);
+                o.pos.xy += offset * o.pos.z * _Outline_Bold;
+                o.color = _Outline_Color;
+                return o;
+            }
+
+            fixed4 frag(v2f i) : SV_Target 
+            {
+                return i.color;
+            }
+            ENDCG
+        }
     }
     FallBack "Diffuse"
 }
